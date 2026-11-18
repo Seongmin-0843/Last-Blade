@@ -1,0 +1,24 @@
+# 줄바꿈: 텍스트는 저장소에 LF로 저장 (Windows에서 CRLF 경고/불필요한 diff 방지)
+* text=auto
+
+# Unity 텍스트(YAML) 자산과 .meta는 항상 LF
+*.cs          text eol=lf diff=csharp
+*.meta        text eol=lf
+*.unity       text eol=lf
+*.prefab      text eol=lf
+*.asset       text eol=lf
+*.mat         text eol=lf
+*.anim        text eol=lf
+*.controller  text eol=lf
+*.inputactions text eol=lf
+*.shader      text eol=lf
+*.md          text eol=lf
+*.json        text eol=lf
+
+# 바이너리
+*.png   binary
+*.jpg   binary
+*.pdf   binary
+*.wav   binary
+*.mp3   binary
+*.ogg   binary

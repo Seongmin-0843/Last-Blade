@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e6cc3c8db41f2a7c7ad29cfe016c6fb, type: 3}
+  m_Name: SwordWave
+  m_EditorClassIdentifier: 
+  type: 1
+  displayName: "검기 날리기"
+  descriptions:
+  - "칼을 5번 휘두를 때마다 검기 발사"
+  - "검기 1개 → 2개"
+  - "검기 2개 → 3개"
+  values:
+  - 1
+  - 2
+  - 3
