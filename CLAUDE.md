@@ -1,7 +1,7 @@
 # Last Blade — 2D 뱀서라이크
 
-원본 기획서: `docs/Last_Blade_기획서.pdf` (8p, 2026-10-27). 이 문서는 그 압축본이다.
-수치가 충돌하면 PDF가 우선. PDF를 다시 읽어야 하면 `pdftotext -layout -enc UTF-8`.
+이 문서(CLAUDE.md)가 Last Blade의 최신 기획서이자 구현 기준이다. (초기 버전 PDF: `docs/Last_Blade_기획서.pdf`)
+수치나 규칙이 다르면 **이 문서가 최우선**이다.
 
 ## 개요
 
