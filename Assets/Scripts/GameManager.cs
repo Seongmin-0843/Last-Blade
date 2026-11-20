@@ -11,6 +11,8 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] PlayerHealth player;
     [SerializeField] ExperienceManager experience;
+    [Tooltip("임시 HUD(OnGUI) 글꼴.")]
+    [SerializeField] Font font;
 
     public float SurvivalTime { get; private set; }
     public int Kills { get; private set; }
@@ -71,6 +73,7 @@ public class GameManager : MonoBehaviour
     // ponytail: M6에서 UI로 교체할 임시 화면. 게임 오버 화면은 다시 하기를 R 키로 받는다.
     void OnGUI()
     {
+        GUI.skin.font = font;
         GUI.skin.label.fontSize = 28;
         string time = $"{(int)SurvivalTime / 60:00}:{(int)SurvivalTime % 60:00}";
         string level = experience.IsMaxLevel ? "Lv MAX" : $"Lv {experience.Level} ({experience.Exp}/{experience.RequiredExp})";

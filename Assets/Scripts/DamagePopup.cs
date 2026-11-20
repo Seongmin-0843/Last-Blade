@@ -24,12 +24,9 @@ public class DamagePopup : MonoBehaviour
         text = GetComponent<TextMesh>();
         baseColor = text.color;
 
-        // M6에서 TMP로 UI를 정리할 때 함께 바꿔도 된다. 숫자만 쓰니 지금은 내장 폰트로 충분.
-        Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        text.font = font;
-
+        // 폰트는 프리팹의 TextMesh에서 정한다. TextMesh는 폰트 머티리얼을 써야 글자가 보인다.
         var meshRenderer = GetComponent<MeshRenderer>();
-        meshRenderer.sharedMaterial = font.material;
+        meshRenderer.sharedMaterial = text.font.material;
         meshRenderer.sortingOrder = sortingOrder;
     }
 
