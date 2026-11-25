@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Space로 이동 방향(정지 중이면 커서 방향)으로 돌진. 획득 전에는 컴포넌트가 꺼져 있다. (기획서 §6)
+/// 대쉬 버튼으로 이동 방향(정지 중이면 조준 방향)으로 돌진. 획득 전에는 컴포넌트와 버튼이 꺼져 있다. (기획서 §6)
 /// </summary>
 public class DashSkill : MonoBehaviour
 {
@@ -10,6 +10,8 @@ public class DashSkill : MonoBehaviour
     [SerializeField] float distance = 3f;
     [Tooltip("돌진에 걸리는 시간(초).")]
     [SerializeField] float duration = 0.12f;
+    [Tooltip("화면의 대쉬 버튼(OnScreenButton). 획득하면 켠다.")]
+    [SerializeField] GameObject touchButton;
 
     PlayerController controller;
     SwordAttack sword;
@@ -36,6 +38,7 @@ public class DashSkill : MonoBehaviour
     {
         cooldown = newCooldown;
         enabled = true;
+        touchButton.SetActive(true);
     }
 
     void Update()

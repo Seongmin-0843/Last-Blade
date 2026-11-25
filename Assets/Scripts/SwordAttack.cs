@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// 클릭 입력, 공격 딜레이, 부채꼴 판정, 스윙 이벤트. (기획서 §4)
+/// 조준·공격 입력(PC: 커서 + 클릭 / 모바일: 오른쪽 스틱을 떼면), 공격 딜레이, 부채꼴 판정, 스윙 이벤트. (기획서 §4)
 /// </summary>
 public class SwordAttack : MonoBehaviour
 {
@@ -22,6 +22,10 @@ public class SwordAttack : MonoBehaviour
     [Tooltip("휘두르는 시간(초). 칼을 휘두르는 동안 타격 판정도 켜져 있다.")]
     [SerializeField] float hitWindow = 0.3f;
     [SerializeField] LayerMask enemyLayers;
+
+    [Header("조준")]
+    [Tooltip("오른쪽 스틱을 이만큼(0~1) 넘게 당겨야 조준으로 친다. 이 아래로 돌아오면 손을 뗀 것으로 보고 휘두른다.")]
+    [SerializeField] float aimThreshold = 0.3f;
 
     [Header("연출")]
     [SerializeField] Transform swordPivot;
@@ -46,31 +50,49 @@ public class SwordAttack : MonoBehaviour
 
     Camera cam;
     InputAction attackAction;
+    InputAction lookAction;
     ContactFilter2D enemyFilter;
     Vector2 aim = Vector2.right;
     Vector2 swingOrigin;
+    Vector2 swingAim;
     float aimAngle;
     float nextAttackTime;
     float hitWindowEnd;
+    bool aiming;
 
     void Awake()
     {
         cam = Camera.main;
         attackAction = InputSystem.actions.FindAction("Player/Attack", true);
+        // 오른쪽 가상 스틱(OnScreenStick)이 <Gamepad>/rightStick 으로 값을 넣는다.
+        lookAction = InputSystem.actions.FindAction("Player/Look", true);
 
         enemyFilter = new ContactFilter2D { useTriggers = true };
         enemyFilter.SetLayerMask(enemyLayers);
     }
 
-    void OnEnable() => attackAction.Enable();
-    void OnDisable() => attackAction.Disable();
+    void OnEnable()
+    {
+        attackAction.Enable();
+        lookAction.Enable();
+    }
+
+    void OnDisable()
+    {
+        attackAction.Disable();
+        lookAction.Disable();
+    }
 
     void Update()
     {
-        if (GameManager.Instance.InputBlocked) return;
+        if (GameManager.Instance.InputBlocked)
+        {
+            aiming = false; // 레벨업 창이 뜰 때 잡고 있던 스틱이 창을 닫은 뒤 휘두르기로 이어지지 않게
+            return;
+        }
 
-        if (attackAction.WasPressedThisFrame() && Time.time >= nextAttackTime && !IsPointerOverUI())
-            Swing();
+        if (GameManager.TouchControls) UpdateStickAttack();
+        else UpdateMouseAttack();
 
         if (Time.time < hitWindowEnd)
         {
@@ -89,27 +111,44 @@ public class SwordAttack : MonoBehaviour
         else
         {
             // 평소에는 칼끝이 공격 방향(조준)을 가리킨다.
-            AimAtCursor();
+            aimAngle = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg;
             swordPivot.localRotation = Quaternion.Euler(0f, 0f, aimAngle);
         }
+    }
+
+    // 모바일: 스틱을 당기는 동안 칼끝이 그 방향을 가리키고, 손을 떼는 순간 휘두른다.
+    // 놓을 때마다 1회(클릭당 1회와 같은 규칙). 딜레이 중에 놓으면 무시한다.
+    void UpdateStickAttack()
+    {
+        Vector2 look = lookAction.ReadValue<Vector2>();
+        bool holding = look.sqrMagnitude >= aimThreshold * aimThreshold;
+        if (holding) aim = look.normalized;
+
+        bool released = aiming && !holding;
+        aiming = holding;
+        if (released && Time.time >= nextAttackTime) Swing();
+    }
+
+    // PC: 칼끝이 커서를 따라가고 클릭하면 휘두른다. UI(레벨업 카드 등) 위 클릭은 공격이 아니다.
+    void UpdateMouseAttack()
+    {
+        if (Mouse.current == null) return;
+
+        Vector2 toCursor = (Vector2)cam.ScreenToWorldPoint(Mouse.current.position.ReadValue()) - (Vector2)transform.position;
+        if (toCursor.sqrMagnitude > Mathf.Epsilon) aim = toCursor.normalized;
+
+        if (attackAction.WasPressedThisFrame() && Time.time >= nextAttackTime && !IsPointerOverUI())
+            Swing();
     }
 
     static bool IsPointerOverUI() =>
         EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
 
-    void AimAtCursor()
-    {
-        if (Mouse.current == null) return;
-
-        Vector2 cursor = cam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-        Vector2 toCursor = cursor - (Vector2)transform.position;
-        if (toCursor.sqrMagnitude > Mathf.Epsilon) aim = toCursor.normalized;
-        aimAngle = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg;
-    }
-
     void Swing()
     {
-        AimAtCursor();
+        // 판정 방향은 휘두른 순간에 고정한다. 휘두르는 도중 조준을 바꿔도 범위는 돌아가지 않는다.
+        swingAim = aim;
+        aimAngle = Mathf.Atan2(aim.y, aim.x) * Mathf.Rad2Deg;
 
         swingOrigin = transform.position;
         nextAttackTime = Time.time + attackDelay * DelayMultiplier;
@@ -141,10 +180,10 @@ public class SwordAttack : MonoBehaviour
             float distance = toEnemy.magnitude;
             float bodyRadius = overlaps[i].bounds.extents.x;
             float bodyAngle = distance > bodyRadius ? Mathf.Asin(bodyRadius / distance) * Mathf.Rad2Deg : 180f;
-            if (Vector2.Angle(aim, toEnemy) - bodyAngle > arcAngle * 0.5f) continue;
+            if (Vector2.Angle(swingAim, toEnemy) - bodyAngle > arcAngle * 0.5f) continue;
             if (!hitThisSwing.Add(enemy)) continue;
 
-            Vector2 pushDir = toEnemy.sqrMagnitude > Mathf.Epsilon ? toEnemy.normalized : aim;
+            Vector2 pushDir = toEnemy.sqrMagnitude > Mathf.Epsilon ? toEnemy.normalized : swingAim;
             enemy.TakeDamage(Damage, pushDir * knockback);
             Hit?.Invoke(enemy);
         }

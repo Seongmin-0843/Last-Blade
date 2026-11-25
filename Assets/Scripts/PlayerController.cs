@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// 이동 처리, 맵 경계 안으로 제한, 커서 위치에 따른 좌우 반전(X flip). (기획서 §3)
+/// 이동 처리, 맵 경계 안으로 제한, 조준 방향에 따른 좌우 반전(X flip). (기획서 §3)
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
@@ -22,13 +22,13 @@ public class PlayerController : MonoBehaviour
 
     static readonly int MovingParam = Animator.StringToHash("Moving");
 
-    Camera cam;
+    SwordAttack sword;
     InputAction moveAction;
     Vector2 halfSize;
 
     void Awake()
     {
-        cam = Camera.main;
+        sword = GetComponent<SwordAttack>();
 
         // 프로젝트 전역 Input Actions(Assets/Settings/InputSystem_Actions)를 쓴다.
         // Project Settings > Input System Package 에 이미 등록돼 있어 Inspector 참조가 필요 없다.
@@ -60,11 +60,8 @@ public class PlayerController : MonoBehaviour
 
         animator.SetBool(MovingParam, input != Vector2.zero);
 
-        // 바라보는 방향은 커서 기준. 이동 방향과는 무관.
-        if (sprite == null || Mouse.current == null) return;
-
-        Vector3 cursor = cam.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-        sprite.flipX = cursor.x < transform.position.x;
+        // 바라보는 방향은 조준(오른쪽 스틱) 기준. 이동 방향과는 무관.
+        if (sword.Aim.x != 0f) sprite.flipX = sword.Aim.x < 0f;
     }
 
     /// <summary>맵 경계 안에서 delta만큼 옮긴다.</summary>

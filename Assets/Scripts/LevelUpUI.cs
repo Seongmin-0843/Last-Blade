@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>
-/// 레벨업 카드 2장. 마우스 클릭 또는 1/2 키로 고른다.
+/// 레벨업 카드 2장. 탭·클릭 또는 1/2 키로 고른다.
 /// </summary>
 public class LevelUpUI : MonoBehaviour
 {
